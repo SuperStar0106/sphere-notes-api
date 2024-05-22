@@ -75,11 +75,9 @@ describe('SecretNoteController (e2e)', () => {
 		expect(decrypt(getResponse.body.note)).toBe(testNote.note); // Ensure it's encrypted as a correct value
 
 		// Step 4: Decrypt the note and verify content
-		console.log('createdNoteId: ', createdNoteId);
 		const decryptResponse = await request(app.getHttpServer())
 			.get(`/secret-notes/${createdNoteId}/decrypted`)
 			.expect(200);
-		console.log('encryptedResponse: ', decryptResponse.body.note);
 
 		expect(decryptResponse.body.id).toBe(createdNoteId);
 		expect(decryptResponse.body.note).toBe(testNote.note);

@@ -33,11 +33,7 @@ export class SecretNoteService {
 
   async findAll(): Promise<SecretNote[]> {
     try {
-      const secretNotes = await this.secretNoteRepository.find();
-      if (!secretNotes || !secretNotes.length) {
-        throw new NotFoundException(`No Secret Note`);
-      }
-      return secretNotes;
+      return await this.secretNoteRepository.find();
     } catch (error) {
       throw new InternalServerErrorException(
         'Error retrieving secret notes',
@@ -52,10 +48,13 @@ export class SecretNoteService {
         where: { id },
       });
       if (!secretNote) {
-        throw new NotFoundException(`Secret Note with ID ${id} not found `);
+        throw new NotFoundException(`Secret Note with ID ${id} not found`);
       }
       return secretNote;
     } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
       throw new InternalServerErrorException(
         `Error retrieving secret note with ID ${id}`,
         error.message,
@@ -68,20 +67,22 @@ export class SecretNoteService {
     updateSecretNoteDto: CreateUpdateSecretNoteDto,
   ): Promise<SecretNote> {
     try {
-      const updatedNote = await this.secretNoteRepository.findOne({
+      const existingNote = await this.secretNoteRepository.findOne({
         where: { id },
       });
 
-      if (!updatedNote) {
+      if (!existingNote) {
         throw new NotFoundException(`Secret note with ID ${id} not found`);
       }
 
-      await this.secretNoteRepository.upsert(
-        { id: id, note: updateSecretNoteDto.note },
-        ['id'],
-      );
-      return updatedNote;
+      const updatedNote = { ...existingNote, ...updateSecretNoteDto };
+      await this.secretNoteRepository.upsert(updatedNote, ['id']);
+
+      return await this.secretNoteRepository.findOne({ where: { id } });
     } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
       throw new InternalServerErrorException(
         `Error updating secret note with ID ${id}`,
         error.message,
@@ -102,6 +103,9 @@ export class SecretNoteService {
       await this.secretNoteRepository.softDelete(id);
       return secretNote;
     } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
       throw new InternalServerErrorException(
         `Error removing secret note with ID ${id}`,
         error.message,

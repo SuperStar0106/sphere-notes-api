@@ -4,20 +4,27 @@ import { SecretNoteService } from './secret-note.service';
 import { CreateUpdateSecretNoteDto } from './dto/secret-note.dto';
 import { SecretNote } from './entity/secret-note.entity';
 import { NotFoundException } from '@nestjs/common';
+import { encrypt, decrypt } from './../../src/utils/crypto.utils';
+
+jest.mock('./../../src/utils/crypto.utils');
 
 const mockSecretNote: SecretNote = {
 	id: '1',
-	note: 'test note',
+	note: 'encrypted-note',
 	createdAt: new Date(),
 	updatedAt: new Date(),
 	deletedAt: undefined,
+};
+
+const mockDecryptedNote: SecretNote = {
+	...mockSecretNote,
+	note: 'decrypted-note',
 };
 
 const mockSecretNoteService = {
 	create: jest.fn(),
 	findAll: jest.fn(),
 	findById: jest.fn(),
-	findByIdDecrypted: jest.fn(),
 	update: jest.fn(),
 	remove: jest.fn(),
 };
@@ -46,22 +53,27 @@ describe('SecretNoteController', () => {
 	});
 
 	describe('create', () => {
-		it('should create a secret note', async () => {
+		it('should create a secret note with encrypted content', async () => {
 			const dto: CreateUpdateSecretNoteDto = { note: 'test note' };
+			(encrypt as jest.Mock).mockReturnValue('encrypted-note');
 			mockSecretNoteService.create.mockResolvedValue(mockSecretNote);
 
 			const result = await controller.create(dto);
 			expect(result).toEqual(mockSecretNote);
-			expect(service.create).toHaveBeenCalledWith(dto);
+			expect(encrypt).toHaveBeenCalledWith('test note');
+			expect(service.create).toHaveBeenCalledWith({
+				...dto,
+				note: 'encrypted-note',
+			});
 		});
 	});
 
 	describe('findAll', () => {
 		it('should return all secret notes', async () => {
-			mockSecretNoteService.findAll.mockResolvedValue(mockSecretNote);
+			mockSecretNoteService.findAll.mockResolvedValue([mockSecretNote]);
 
 			const result = await controller.findAll();
-			expect(result).toEqual(mockSecretNote);
+			expect(result).toEqual([mockSecretNote]);
 			expect(service.findAll).toHaveBeenCalled();
 		});
 	});
@@ -88,22 +100,29 @@ describe('SecretNoteController', () => {
 
 	describe('findByIdDecrypted', () => {
 		it('should return a decrypted secret note by id', async () => {
-			mockSecretNoteService.findByIdDecrypted.mockResolvedValue(mockSecretNote);
+			mockSecretNoteService.findById.mockResolvedValue(mockSecretNote);
+			(decrypt as jest.Mock).mockReturnValue('decrypted-note');
 
 			const result = await controller.findByIdDecrypted('1');
-			expect(result).toEqual(mockSecretNote);
-			expect(service.findByIdDecrypted).toHaveBeenCalledWith('1');
+			expect(result).toEqual(mockDecryptedNote);
+			expect(service.findById).toHaveBeenCalledWith('1');
+			expect(decrypt).toHaveBeenCalledWith('encrypted-note');
 		});
 	});
 
 	describe('update', () => {
-		it('should update a secret note', async () => {
+		it('should update a secret note with encrypted content', async () => {
 			const dto: CreateUpdateSecretNoteDto = { note: 'test note' };
+			(encrypt as jest.Mock).mockReturnValue('encrypted-note');
 			mockSecretNoteService.update.mockResolvedValue(mockSecretNote);
 
 			const result = await controller.update('1', dto);
 			expect(result).toEqual(mockSecretNote);
-			expect(service.update).toHaveBeenCalledWith('1', dto);
+			expect(encrypt).toHaveBeenCalledWith('test note');
+			expect(service.update).toHaveBeenCalledWith('1', {
+				...dto,
+				note: 'encrypted-note',
+			});
 		});
 
 		it('should throw NotFoundException if note not found during update', async () => {
@@ -118,17 +137,10 @@ describe('SecretNoteController', () => {
 
 	describe('remove', () => {
 		it('should remove a secret note', async () => {
-			const note: SecretNote = {
-				id: '1',
-				note: 'test note',
-				createdAt: undefined,
-				updatedAt: undefined,
-				deletedAt: undefined,
-			};
-			mockSecretNoteService.remove.mockResolvedValue(note);
+			mockSecretNoteService.remove.mockResolvedValue(mockSecretNote);
 
 			const result = await controller.remove('1');
-			expect(result).toEqual(note);
+			expect(result).toEqual(mockSecretNote);
 			expect(service.remove).toHaveBeenCalledWith('1');
 		});
 	});

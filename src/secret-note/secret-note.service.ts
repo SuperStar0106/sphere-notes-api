@@ -1,9 +1,9 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { SecretNote } from 'src/secret-note/entity/secret-note.entity';
+import { SecretNote } from './entity/secret-note.entity';
 import { CreateUpdateSecretNoteDto } from './dto/secret-note.dto';
-import { encrypt, decrypt } from 'src/utils/crypto.utils';
+import { encrypt, decrypt } from '../utils/crypto.utils';
 
 @Injectable()
 export class SecretNoteService {
@@ -24,8 +24,9 @@ export class SecretNoteService {
 
   async findAll(): Promise<SecretNote[]> {
     const secretNotes = await this.secretNoteRepository.find();
-    if (!secretNotes || !secretNotes.length)
+    if (!secretNotes || !secretNotes.length) {
       throw new NotFoundException(`No Secret Note`);
+    }
     return secretNotes;
   }
 
@@ -33,8 +34,9 @@ export class SecretNoteService {
     const secretNote = await this.secretNoteRepository.findOne({
       where: { id },
     });
-    if (!secretNote)
+    if (!secretNote) {
       throw new NotFoundException(`Secret Note with ID ${id} not found `);
+    }
     return secretNote;
   }
 
@@ -42,8 +44,9 @@ export class SecretNoteService {
     const secretNote = await this.secretNoteRepository.findOne({
       where: { id },
     });
-    if (!secretNote)
+    if (!secretNote) {
       throw new NotFoundException(`Secret Note with ID ${id} not found `);
+    }
 
     const decryptedNote = decrypt(secretNote.note);
     const decryptedSecretNote = { ...secretNote, note: decryptedNote };

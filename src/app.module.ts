@@ -19,4 +19,4 @@ import { SecretNoteController } from './secret-note/secret-note.controller';
 	controllers: [AppController],
 	providers: [AppService],
 })
-export class AppModule { }
+export class AppModule {}

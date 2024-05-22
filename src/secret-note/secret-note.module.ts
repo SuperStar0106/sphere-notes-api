@@ -1,9 +1,12 @@
 import { Module } from '@nestjs/common';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { SecretNote } from './entity/secret-note.entity';
 import { SecretNoteService } from './secret-note.service';
 import { SecretNoteController } from './secret-note.controller';
 
 @Module({
-  providers: [SecretNoteService],
-  controllers: [SecretNoteController]
+	imports: [TypeOrmModule.forFeature([SecretNote])],
+	providers: [SecretNoteService],
+	controllers: [SecretNoteController],
 })
-export class SecretNoteModule {}
+export class SecretNoteModule { }

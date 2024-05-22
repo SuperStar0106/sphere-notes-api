@@ -11,6 +11,7 @@ import {
 import { SecretNoteService } from './secret-note.service';
 import { CreateUpdateSecretNoteDto } from './dto/secret-note.dto';
 import { SecretNote } from './entity/secret-note.entity';
+import { encrypt, decrypt } from '../utils/crypto.utils';
 
 @Controller('secret-notes')
 export class SecretNoteController {
@@ -20,7 +21,11 @@ export class SecretNoteController {
   async create(
     @Body() createSecretNotDto: CreateUpdateSecretNoteDto,
   ): Promise<SecretNote> {
-    return this.secretNoteService.create(createSecretNotDto);
+    const encryptedNoteDto = {
+      ...createSecretNotDto,
+      note: encrypt(createSecretNotDto.note),
+    };
+    return this.secretNoteService.create(encryptedNoteDto);
   }
 
   @Get('/')
@@ -37,7 +42,8 @@ export class SecretNoteController {
   async findByIdDecrypted(
     @Param('id', ParseUUIDPipe) id: string,
   ): Promise<SecretNote> {
-    return await this.secretNoteService.findByIdDecrypted(id);
+    const secretNote = await this.secretNoteService.findById(id);
+    return { ...secretNote, note: decrypt(secretNote.note) };
   }
 
   @Put('/:id')
@@ -45,7 +51,11 @@ export class SecretNoteController {
     @Param('id', ParseUUIDPipe) id: string,
     @Body() updateSecretNoteDto: CreateUpdateSecretNoteDto,
   ): Promise<SecretNote> {
-    return await this.secretNoteService.update(id, updateSecretNoteDto);
+    const encryptedNoteDto = {
+      ...updateSecretNoteDto,
+      note: encrypt(updateSecretNoteDto.note),
+    };
+    return await this.secretNoteService.update(id, encryptedNoteDto);
   }
 
   @Delete('/:id')

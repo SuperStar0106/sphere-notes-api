@@ -29,17 +29,17 @@ export class SecretNoteController {
   }
 
   @Get('/:id')
-  async findById(@Param('id', ParseUUIDPipe) id: string): Promise<string> {
+  async findById(@Param('id', ParseUUIDPipe) id: string): Promise<SecretNote> {
     const secretNote = await this.secretNoteService.findById(id);
-    return secretNote.note;
+    return secretNote;
   }
 
   @Get('/:id/decrypted')
   async findByIdDecrypted(
     @Param('id', ParseUUIDPipe) id: string,
-  ): Promise<string> {
-    const secretNote = await this.secretNoteService.findById(id);
-    return secretNote.note;
+  ): Promise<SecretNote> {
+    const secretNote = await this.secretNoteService.findByIdDecrypted(id);
+    return secretNote;
   }
 
   @Put('/:id')

@@ -1,0 +1,5 @@
+.git
+Dockerfile*
+/build
+/tsconfig.buil.json
+/node_modules

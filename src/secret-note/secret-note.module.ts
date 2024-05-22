@@ -9,4 +9,4 @@ import { SecretNoteController } from './secret-note.controller';
 	providers: [SecretNoteService],
 	controllers: [SecretNoteController],
 })
-export class SecretNoteModule {}
+export class SecretNoteModule { }
